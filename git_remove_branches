@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+
+const readline = require('readline');
+const { exec } = require('child_process');
+const { stdout } = require('process');
+
+let branchList = [];
+let deleteCounter = 0;
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+exec('git branch', (err, stdout, stderr)=> {
+  if (err) {
+    console.log(`Error: ${err}`)
+  }
+  const unfilteredBranchList = stdout.split("\n");
+  branchList = unfilteredBranchList
+  .filter((branch)=> {
+    return branch[0] != "*" && branch.length
+  })
+  .map((branch)=> {
+    return branch.trim();
+  });
+  askQuestions();
+})
+
+function askQuestions() {
+  rl.question(`Delete branch \x1b[32m${branchList[0]}\x1b[0m? > `, (answer)=> {
+    if (answer == 'y' || answer == 'yes') {
+      console.log('remove branch');
+      deleteCounter++;
+      branchList.shift();
+    }
+    else if (answer == 'n' || answer == 'no') {
+      console.log('dont remove branch')
+      branchList.shift();
+    }
+    if (branchList.length) {
+      askQuestions();
+    } else {
+      console.log(`Deleted ${deleteCounter} branch${deleteCounter == 1 ? '' : 'es'}.`);
+      rl.close()
+    }
+  })
+}
